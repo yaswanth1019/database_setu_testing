@@ -5,23 +5,29 @@
 
 ### 1. THE MAPPING RULES (MANDATORY)
 For every **Silver Table** provided, you must generate a **Bronze Table** using these strict mapping rules:
-1.  **Table Naming:** Prefix the table with `bronze.` (e.g., `silver.machine_cycles` becomes `bronze.stg_machine_cycles`).
-2.  **Column Mirroring:** Copy all business columns from the Silver table but remove "Calculated" columns (like `load_unload_sec` or `shift_id`).
-3.  **Metadata Injection:** Every Bronze table **MUST** include these four system columns:
+1.  **Table Naming:** Prefix the table with `bronze.stg_` (e.g., `silver.machine_cycles` becomes `bronze.stg_machine_cycles`).
+2.  **Column Transformation:**
+    *   **Remove**: `company_id`, `machine_id`, `shift_id` (and any other calculated columns).
+    *   **Rename**:
+        *   `time` -> `cnctimestamp` (General rule).
+        *   *Exception*: Keep `cycle_start` / `cycle_end` for Cycle tables.
+        *   *Exception*: Keep `down_start` / `down_end` for Downtime tables.
+3.  **Metadata Injection:** Every Bronze table **MUST** include these five system columns:
     *   `id BIGINT GENERATED ALWAYS AS IDENTITY`: The absolute tie-breaker for watermarking.
-    *   `ingested_at TIMESTAMPTZ DEFAULT NOW()`: To measure ingestion latency.
+    *   `ingested_at TIMESTAMPTZ DEFAULT NOW()`: **Primary Partition Key**.
     *   `kafka_offset BIGINT`: For downstream auditability.
-    *   `device_id`: Ensure this matches the Master table ID type exactly.
+    *   `device_iot_id INTEGER NOT NULL`: Hardware ID.
+    *   `machine_iot_id INTEGER NOT NULL`: Machine ID.
 
 ### 2. TIMESCALEDB CONFIGURATION (SCALING DNA)
 For every generated table, include the following SQL commands:
-1.  **Hypertable Conversion:**
+1.  **Hypertable Conversion (Partition by Ingestion Time):**
     ```sql
-    SELECT create_hypertable('[TABLE_NAME]', 'time', chunk_time_interval => INTERVAL '1 day');
+    SELECT create_hypertable('[TABLE_NAME]', 'ingested_at', chunk_time_interval => INTERVAL '1 day');
     ```
-2.  **ETL Indexing:**
+2.  **ETL Indexing (Watermark Optimization):**
     ```sql
-    CREATE INDEX idx_[TABLE_SHORT_NAME]_watermark ON [TABLE_NAME] (id, time DESC);
+    CREATE INDEX idx_[TABLE_SHORT_NAME]_watermark ON [TABLE_NAME] (id, ingested_at DESC);
     ```
 3.  **Retention Policy:**
     ```sql
@@ -47,5 +53,8 @@ If you don't have the `id BIGINT IDENTITY` in your Bronze layer, you can never s
 
 **The "Chunk Management" Rule:**
 We use a **1-day chunk interval** for Bronze because you are dropping this data every 30 days. Smaller chunks make the `DROP_CHUNK` command almost instantaneous and prevent the database from locking up during cleanup while 10,000 machines are still trying to write data.
+
+**The "Ingestion Partitioning" Rule:**
+We partition by `ingested_at` because Bronze is a temporary landing zone. We want to drop chunks based on *when we received the data*, not when the event happened (which could be months ago for buffered data). This ensures 30-day retention works perfectly to clean up the disk.
 
 **Next Step:** I am ready. **Paste your Silver table DDLs or column lists**, and I will generate the exact Bronze Layer scripts you need.
