@@ -24,15 +24,17 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_downtime (
-    down_start timestamp with time zone NOT NULL,
-    down_end timestamp with time zone,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
     machine_iot_id integer NOT NULL,
-    down_code text,
+    shift_id integer,
+    shift_name varchar(50),
+    down_start timestamp with time zone,
+    down_end timestamp with time zone,
+    program_no varchar(50),
     down_id integer,
     down_threshold integer,
-    created_at timestamp with time zone DEFAULT now(),
-    shift_id text
+    created_at timestamp with time zone DEFAULT now()
 );
 
 

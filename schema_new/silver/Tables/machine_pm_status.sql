@@ -24,14 +24,15 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_pm_status (
-    "time" timestamp with time zone NOT NULL,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
     machine_iot_id integer NOT NULL,
+    shift_id integer,
+    shift_name varchar(50),
     status text,
     pm_corrected_count integer,
     pm_pending_count integer,
-    created_at timestamp with time zone DEFAULT now(),
-    shift_id text
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -39,7 +40,7 @@ CREATE TABLE silver.machine_pm_status (
 -- Name: machine_pm_status_time_idx; Type: INDEX; Schema: silver; Owner: -
 --
 
-CREATE INDEX machine_pm_status_time_idx ON silver.machine_pm_status USING btree ("time" DESC);
+CREATE INDEX machine_pm_status_logical_date_idx ON silver.machine_pm_status USING btree (logical_date DESC);
 
 
 --

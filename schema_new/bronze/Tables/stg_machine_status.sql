@@ -9,9 +9,9 @@ CREATE TABLE bronze.stg_machine_status (
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     cnctimestamp timestamp with time zone,
-    program_no text,
-    status text,
-    operator_id text,
+    program_no varchar(50),
+    status varchar(50),
+    operator_id varchar(50),
     target integer
 );
 

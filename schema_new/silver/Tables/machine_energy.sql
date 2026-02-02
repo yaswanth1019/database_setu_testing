@@ -24,15 +24,16 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_energy (
-    "time" timestamp with time zone NOT NULL,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
-     machine_iot_id integer NOT NULL,
-    category text,
-    servo_energy double precision,
-    spindle_energy double precision,
-    total_energy double precision,
-    created_at timestamp with time zone DEFAULT now(),
-    shift_id text
+    machine_iot_id integer NOT NULL,
+    shift_id integer,
+    shift_name varchar(50),
+    category varchar(50),
+    servo_energy numeric(12,3),
+    spindle_energy numeric(12,3),
+    total_energy numeric(12,3),
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -40,7 +41,7 @@ CREATE TABLE silver.machine_energy (
 -- Name: machine_energy_time_idx; Type: INDEX; Schema: silver; Owner: -
 --
 
-CREATE INDEX machine_energy_time_idx ON silver.machine_energy USING btree ("time" DESC);
+CREATE INDEX machine_energy_logical_date_idx ON silver.machine_energy USING btree (logical_date DESC);
 
 
 --

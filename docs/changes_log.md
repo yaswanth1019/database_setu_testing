@@ -82,3 +82,30 @@ I have updated the Silver layer schema to align with the Bronze layer identifier
   - `machine_status`
   - `machine_tool_usage`
 - **Excluded**: `customer_feedback` table remains unchanged.
+
+### 2. Bronze Layer Logical Attributes
+- **Added**: `logical_date` and `shift_id` to `stg_machine_focas` only. The `bronze_layer_generator` rules remain unchanged for other tables.
+
+### 3. Data Type Refinements (Bronze & Silver)
+- **stg_machine_alarms / machine_alarms**: `alarm_no` changed from `text` to `integer`.
+- **stg_machine_cycles / machine_cycles**: `program_no` changed from `text` to `varchar(50)`.
+- **stg_machine_downtime / machine_downtime**: Removed `down_code`, added `program_no varchar(50)`.
+- **stg_machine_energy / machine_energy**: `category` to `varchar(50)`, energy columns to `numeric(12,3)`.
+- **stg_machine_focas / machine_focas**: `part_count`, `rej_count`, `pot`, `ot`, `ct` changed to `integer`. Columns reordered (focas only).
+- **stg_machine_status / machine_status**: `program_no`, `status`, `operator_id` changed to `varchar(50)`.
+- **stg_machine_tool_usage / machine_tool_usage**: `tool_no` to `varchar(50)`, `target_count`, `actual_count` to `integer`.
+
+### 4. Silver Layer Time & Shift Refinements
+- **Renamed**: `time` → `logical_date` in all Silver `machine_*` tables.
+- **Converted**: `shift_id` from `text` to `integer`.
+- **Added**: `shift_name varchar(50)` column.
+- **Updated**: All time-based indexes renamed (e.g., `machine_alarms_time_idx` → `machine_alarms_logical_date_idx`).
+
+### 5. Silver Layer Column Reordering
+- **Standardized column order** in all Silver `machine_*` tables:
+  1. `logical_date` (partition key)
+  2. `company_id` (tenant identifier)
+  3. `machine_iot_id` (machine reference)
+  4. `shift_id`, `shift_name` (shift context)
+  5. Table-specific business columns
+  6. `created_at` (audit timestamp at end)

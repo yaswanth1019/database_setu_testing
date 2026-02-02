@@ -24,14 +24,15 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_tool_usage (
-    "time" timestamp with time zone NOT NULL,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
     machine_iot_id integer NOT NULL,
-    tool_no text NOT NULL,
-    target_count double precision,
-    actual_count double precision,
-    created_at timestamp with time zone DEFAULT now(),
-    shift_id text
+    shift_id integer,
+    shift_name varchar(50),
+    tool_no varchar(50) NOT NULL,
+    target_count integer,
+    actual_count integer,
+    created_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -39,7 +40,7 @@ CREATE TABLE silver.machine_tool_usage (
 -- Name: machine_tool_usage_time_idx; Type: INDEX; Schema: silver; Owner: -
 --
 
-CREATE INDEX machine_tool_usage_time_idx ON silver.machine_tool_usage USING btree ("time" DESC);
+CREATE INDEX machine_tool_usage_logical_date_idx ON silver.machine_tool_usage USING btree (logical_date DESC);
 
 
 --

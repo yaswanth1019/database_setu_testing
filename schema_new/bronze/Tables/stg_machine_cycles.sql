@@ -10,7 +10,7 @@ CREATE TABLE bronze.stg_machine_cycles (
     machine_iot_id integer NOT NULL,
     cycle_start timestamp with time zone,
     cycle_end timestamp with time zone,
-    program_no text,
+    program_no varchar(50),
     std_load_unload integer,
     std_cycle_time integer,
     actual_load_unload integer,

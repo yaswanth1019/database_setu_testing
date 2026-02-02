@@ -24,18 +24,20 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_cycles (
-    cycle_start timestamp with time zone NOT NULL,
-    cycle_end timestamp with time zone,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
     machine_iot_id integer NOT NULL,
-    program_no text,
+    shift_id integer,
+    shift_name varchar(50),
+    cycle_start timestamp with time zone,
+    cycle_end timestamp with time zone,
+    program_no varchar(50),
     std_load_unload integer,
     std_cycle_time integer,
     actual_load_unload integer,
     actual_cycle_time integer,
-    created_at timestamp with time zone DEFAULT now(),
-    shift_id text,
-    down_threshold integer
+    down_threshold integer,
+    created_at timestamp with time zone DEFAULT now()
 );
 
 

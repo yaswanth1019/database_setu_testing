@@ -9,9 +9,9 @@ CREATE TABLE bronze.stg_machine_tool_usage (
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     cnctimestamp timestamp with time zone,
-    tool_no text NOT NULL,
-    target_count double precision,
-    actual_count double precision
+    tool_no varchar(50) NOT NULL,
+    target_count integer,
+    actual_count integer
 );
 
 --

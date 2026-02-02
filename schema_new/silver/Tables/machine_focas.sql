@@ -24,15 +24,16 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE silver.machine_focas (
-    "time" timestamp with time zone NOT NULL,
+    logical_date timestamp with time zone NOT NULL,
     company_id text NOT NULL,
     machine_iot_id integer NOT NULL,
-    shift_id text,
-    part_count double precision,
-    rej_count double precision,
-    pot double precision,
-    ot double precision,
-    ct double precision,
+    shift_id integer,
+    shift_name varchar(50),
+    part_count integer,
+    rej_count integer,
+    pot integer,
+    ot integer,
+    ct integer,
     created_at timestamp with time zone DEFAULT now()
 );
 
@@ -41,7 +42,7 @@ CREATE TABLE silver.machine_focas (
 -- Name: machine_focas_time_idx; Type: INDEX; Schema: silver; Owner: -
 --
 
-CREATE INDEX machine_focas_time_idx ON silver.machine_focas USING btree ("time" DESC);
+CREATE INDEX machine_focas_logical_date_idx ON silver.machine_focas USING btree (logical_date DESC);
 
 
 --

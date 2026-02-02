@@ -9,10 +9,10 @@ CREATE TABLE bronze.stg_machine_energy (
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     cnctimestamp timestamp with time zone,
-    category text,
-    servo_energy double precision,
-    spindle_energy double precision,
-    total_energy double precision
+    category varchar(50),
+    servo_energy numeric(12,3),
+    spindle_energy numeric(12,3),
+    total_energy numeric(12,3)
 );
 
 --

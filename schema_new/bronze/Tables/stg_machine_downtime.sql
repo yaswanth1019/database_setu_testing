@@ -10,7 +10,7 @@ CREATE TABLE bronze.stg_machine_downtime (
     machine_iot_id integer NOT NULL,
     down_start timestamp with time zone,
     down_end timestamp with time zone,
-    down_code text,
+    program_no varchar(50),
     down_id integer,
     down_threshold integer
 );

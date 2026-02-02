@@ -8,12 +8,14 @@ CREATE TABLE bronze.stg_machine_focas (
     kafka_offset bigint,
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
+    logical_date timestamp with time zone,
+    shift_id integer,
     cnctimestamp timestamp with time zone,
-    part_count double precision,
-    rej_count double precision,
-    pot double precision,
-    ot double precision,
-    ct double precision
+    part_count integer,
+    rej_count integer,
+    pot integer,
+    ot integer,
+    ct integer
 );
 
 --

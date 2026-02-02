@@ -9,7 +9,7 @@ CREATE TABLE bronze.stg_machine_alarms (
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     cnctimestamp timestamp with time zone,
-    alarm_no text,
+    alarm_no integer,
     alarm_desc text
 );
 
