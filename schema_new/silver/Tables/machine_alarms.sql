@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 CREATE TABLE silver.machine_alarms (
     "time" timestamp with time zone NOT NULL,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     alarm_no text,
     alarm_desc text,
     created_at timestamp with time zone DEFAULT now(),

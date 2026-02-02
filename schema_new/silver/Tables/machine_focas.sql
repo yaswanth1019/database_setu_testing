@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 CREATE TABLE silver.machine_focas (
     "time" timestamp with time zone NOT NULL,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     shift_id text,
     part_count double precision,
     rej_count double precision,

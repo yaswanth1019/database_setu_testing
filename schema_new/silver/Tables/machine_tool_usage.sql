@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 CREATE TABLE silver.machine_tool_usage (
     "time" timestamp with time zone NOT NULL,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     tool_no text NOT NULL,
     target_count double precision,
     actual_count double precision,

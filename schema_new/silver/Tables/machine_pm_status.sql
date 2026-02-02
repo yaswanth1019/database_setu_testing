@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 CREATE TABLE silver.machine_pm_status (
     "time" timestamp with time zone NOT NULL,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     status text,
     pm_corrected_count integer,
     pm_pending_count integer,

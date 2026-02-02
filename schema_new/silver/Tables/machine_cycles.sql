@@ -27,7 +27,7 @@ CREATE TABLE silver.machine_cycles (
     cycle_start timestamp with time zone NOT NULL,
     cycle_end timestamp with time zone,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     program_no text,
     std_load_unload integer,
     std_cycle_time integer,

@@ -27,7 +27,7 @@ CREATE TABLE silver.machine_downtime (
     down_start timestamp with time zone NOT NULL,
     down_end timestamp with time zone,
     company_id text NOT NULL,
-    machine_id text NOT NULL,
+    machine_iot_id integer NOT NULL,
     down_code text,
     down_id integer,
     down_threshold integer,

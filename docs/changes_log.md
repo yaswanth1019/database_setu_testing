@@ -63,3 +63,22 @@ Created 8 new tables prefixed with `stg_` matching the Silver layer facts:
 - **Hypertable**: 1-day chunks partitioned by `ingested_at`.
 - **Indexing**: Watermark index `(id, ingested_at DESC)`.
 - **Retention**: 30-day retention policy.
+
+## Phase 3: Silver Layer Refinement
+
+I have updated the Silver layer schema to align with the Bronze layer identifiers, specifically replacing the legacy text-based IDs with integer-based IoT IDs.
+
+### Changes Implemented
+
+#### 1. ID Standardization
+- **Replaced**: `machine_id` (text) with `machine_iot_id` (integer) in all `machine_*` Silver tables.
+- **Affected Tables**:
+  - `machine_alarms`
+  - `machine_cycles`
+  - `machine_downtime`
+  - `machine_energy`
+  - `machine_focas`
+  - `machine_pm_status`
+  - `machine_status`
+  - `machine_tool_usage`
+- **Excluded**: `customer_feedback` table remains unchanged.
