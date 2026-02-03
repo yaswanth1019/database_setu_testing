@@ -8,8 +8,10 @@ CREATE TABLE bronze.stg_machine_pm_status (
     kafka_offset bigint,
     device_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
+    logical_date timestamp with time zone,
+    shift_id integer,
     cnctimestamp timestamp with time zone,
-    status text,
+    status varchar(50),
     pm_corrected_count integer,
     pm_pending_count integer
 );

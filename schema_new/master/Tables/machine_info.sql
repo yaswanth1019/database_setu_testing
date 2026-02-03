@@ -24,10 +24,12 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE master.machine_info (
+    iot_id SERIAL NOT NULL,
     machine_id varchar(50) NOT NULL,
     company_iot_id integer NOT NULL,
-    device_iot_id integer NOT NULL,
-    iot_id SERIAL NOT NULL,
+    device_iot_id integer,
+    ip_address varchar(50),
+    port_no integer,
     created_at timestamp with time zone DEFAULT now()
 );
 

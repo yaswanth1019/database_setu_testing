@@ -20,39 +20,37 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: machine_pm_status; Type: TABLE; Schema: silver; Owner: -
+-- Name: machine_am_status; Type: TABLE; Schema: silver; Owner: -
 --
 
-CREATE TABLE silver.machine_pm_status (
+CREATE TABLE silver.machine_am_status (
     logical_date timestamp with time zone NOT NULL,
     company_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     shift_id integer,
     shift_name varchar(50),
     status varchar(50),
-    pm_corrected_count integer,
-    pm_pending_count integer,
+    am_corrected_count integer,
+    am_pending_count integer,
     created_at timestamp with time zone DEFAULT now()
 );
 
 
 --
--- Name: machine_pm_status_time_idx; Type: INDEX; Schema: silver; Owner: -
+-- Name: machine_am_status_logical_date_idx; Type: INDEX; Schema: silver; Owner: -
 --
 
-CREATE INDEX machine_pm_status_logical_date_idx ON silver.machine_pm_status USING btree (logical_date DESC);
+CREATE INDEX machine_am_status_logical_date_idx ON silver.machine_am_status USING btree (logical_date DESC);
 
 
 --
--- Name: machine_pm_status fk_pm_company; Type: FK CONSTRAINT; Schema: silver; Owner: -
+-- Name: machine_am_status fk_am_company; Type: FK CONSTRAINT; Schema: silver; Owner: -
 --
 
-ALTER TABLE ONLY silver.machine_pm_status
-    ADD CONSTRAINT fk_pm_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
+ALTER TABLE ONLY silver.machine_am_status
+    ADD CONSTRAINT fk_am_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --
 -- PostgreSQL database dump complete
 --
-
-

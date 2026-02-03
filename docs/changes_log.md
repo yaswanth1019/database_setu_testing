@@ -139,3 +139,16 @@ I have completed a major schema wide refactor to align the Master, Silver, Bronz
   - **Alerting**: `active_alerts`, `history`.
 - **Constraint Refactoring**: Updated all Foreign Keys, Composite Primary Keys, and Unique Constraints (e.g., `uq_machine_company` and `fk_active_machine`) to reference the new column names and types.
 
+#### 4. Machine Connection Details
+- **master.machine_info**:
+  - Made `device_iot_id` **nullable** to allow machines without pre-assigned devices.
+  - Added `ip_address` (VARCHAR(50)) and `port_no` (INTEGER) for direct network connectivity.
+  - Standardized column order (PK first, then connection details).
+
+#### 5. Maintenance Status Expansion (AM & PM)
+- **New Tables**: Created `stg_machine_am_status` (Bronze) and `machine_am_status` (Silver) to track Autonomous Maintenance metrics.
+- **Refined columns**: Used `am_corrected_count` and `am_pending_count` as requested.
+- **Standardisation**: 
+  - Updated `machine_pm_status` (Silver) to use `company_iot_id` and added a Foreign Key.
+  - Converted `status` column to `VARCHAR(50)` in both AM and PM tables (Bronze & Silver) for consistency.
+
