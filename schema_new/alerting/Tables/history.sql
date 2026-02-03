@@ -26,7 +26,7 @@ SET default_table_access_method = heap;
 CREATE TABLE alerting.history (
     alert_id bigint NOT NULL,
     "time" timestamp with time zone DEFAULT now() NOT NULL,
-    company_id text NOT NULL,
+    company_iot_id integer NOT NULL,
     rule_id integer,
     machine_id text NOT NULL,
     message text,
@@ -82,7 +82,7 @@ CREATE INDEX history_time_idx ON alerting.history USING btree ("time" DESC);
 --
 
 ALTER TABLE ONLY alerting.history
-    ADD CONSTRAINT fk_ah_company FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT fk_ah_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --
@@ -90,7 +90,7 @@ ALTER TABLE ONLY alerting.history
 --
 
 ALTER TABLE ONLY alerting.history
-    ADD CONSTRAINT fk_history_machine FOREIGN KEY (machine_id, company_id) REFERENCES master.machine_info(machine_id, company_id);
+    ADD CONSTRAINT fk_history_machine FOREIGN KEY (machine_id, company_iot_id) REFERENCES master.machine_info(machine_id, company_iot_id);
 
 
 --

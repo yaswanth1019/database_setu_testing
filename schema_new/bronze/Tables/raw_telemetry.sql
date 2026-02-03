@@ -29,7 +29,7 @@ CREATE TABLE bronze.raw_telemetry (
     iot_id text,
     payload jsonb,
     processed boolean DEFAULT false,
-    company_id text,
+    company_iot_id integer,
     batch_id uuid,
     processing_status text DEFAULT 'pending'::text
 );
@@ -61,7 +61,7 @@ CREATE INDEX raw_telemetry_ingest_time_idx ON bronze.raw_telemetry USING btree (
 --
 
 ALTER TABLE ONLY bronze.raw_telemetry
-    ADD CONSTRAINT raw_telemetry_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT raw_telemetry_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

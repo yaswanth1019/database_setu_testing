@@ -13,8 +13,6 @@ CREATE TABLE bronze.stg_machine_cycles (
     program_no varchar(50),
     std_load_unload integer,
     std_cycle_time integer,
-    actual_load_unload integer,
-    actual_cycle_time integer,
     down_threshold integer
 );
 

@@ -28,9 +28,9 @@ CREATE TABLE master.users (
     user_no text,
     full_name text,
     role text,
-    plant_id text,
+    plant_id integer,
     created_at timestamp with time zone DEFAULT now(),
-    company_id text NOT NULL
+    company_iot_id integer NOT NULL
 );
 
 
@@ -39,7 +39,7 @@ CREATE TABLE master.users (
 --
 
 ALTER TABLE ONLY master.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (user_id, company_id);
+    ADD CONSTRAINT users_pkey PRIMARY KEY (user_id, company_iot_id);
 
 
 --
@@ -47,7 +47,7 @@ ALTER TABLE ONLY master.users
 --
 
 ALTER TABLE ONLY master.users
-    ADD CONSTRAINT fk_user_plant FOREIGN KEY (plant_id, company_id) REFERENCES master.plants(plant_id, company_id);
+    ADD CONSTRAINT fk_user_plant FOREIGN KEY (plant_id) REFERENCES master.plants(plant_id);
 
 
 --
@@ -55,7 +55,7 @@ ALTER TABLE ONLY master.users
 --
 
 ALTER TABLE ONLY master.users
-    ADD CONSTRAINT users_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT users_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

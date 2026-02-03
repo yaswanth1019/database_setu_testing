@@ -25,7 +25,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE master.machine_assets (
     machine_iot_id integer NOT NULL,
-    company_id integer NOT NULL,
+    company_iot_id integer NOT NULL,
     supplier_name varchar(50),
     model_number varchar(50),
     manufacturing_year integer,
@@ -45,7 +45,7 @@ CREATE TABLE master.machine_assets (
 --
 
 ALTER TABLE ONLY master.machine_assets
-    ADD CONSTRAINT machine_assets_pkey PRIMARY KEY (machine_iot_id, company_id);
+    ADD CONSTRAINT machine_assets_pkey PRIMARY KEY (machine_iot_id, company_iot_id);
 
 
 --
@@ -53,7 +53,7 @@ ALTER TABLE ONLY master.machine_assets
 --
 
 ALTER TABLE ONLY master.machine_assets
-    ADD CONSTRAINT machine_assets_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT machine_assets_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 --
 -- Name: machine_assets machine_assets_machine_iot_id_fkey; Type: FK CONSTRAINT; Schema: master; Owner: -

@@ -27,7 +27,7 @@ CREATE TABLE bronze.dead_letter_queue (
     "time" timestamp with time zone DEFAULT now() NOT NULL,
     payload jsonb,
     error_reason text,
-    company_id text
+    company_iot_id integer
 );
 
 
@@ -43,7 +43,7 @@ CREATE INDEX dead_letter_queue_time_idx ON bronze.dead_letter_queue USING btree 
 --
 
 ALTER TABLE ONLY bronze.dead_letter_queue
-    ADD CONSTRAINT dead_letter_queue_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT dead_letter_queue_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

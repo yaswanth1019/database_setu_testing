@@ -25,7 +25,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE silver.machine_focas (
     logical_date timestamp with time zone NOT NULL,
-    company_id text NOT NULL,
+    company_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
     shift_id integer,
     shift_name varchar(50),
@@ -50,7 +50,7 @@ CREATE INDEX machine_focas_logical_date_idx ON silver.machine_focas USING btree 
 --
 
 ALTER TABLE ONLY silver.machine_focas
-    ADD CONSTRAINT fk_mf_company FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT fk_mf_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

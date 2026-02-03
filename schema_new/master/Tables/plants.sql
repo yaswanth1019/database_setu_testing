@@ -25,7 +25,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE master.plants (
     plant_id SERIAL NOT NULL,
-    company_id integer NOT NULL,
+    company_iot_id integer NOT NULL,
     plant_name text,
     plant_city text,
     created_at timestamp with time zone DEFAULT now()
@@ -45,7 +45,7 @@ ALTER TABLE ONLY master.plants
 --
 
 ALTER TABLE ONLY master.plants
-    ADD CONSTRAINT plants_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT plants_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

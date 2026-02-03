@@ -25,7 +25,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE master.shifts (
     shift_id text NOT NULL,
-    company_id text NOT NULL,
+    company_iot_id integer NOT NULL,
     plant_id text NOT NULL,
     shift_name text,
     start_time time without time zone,
@@ -39,7 +39,7 @@ CREATE TABLE master.shifts (
 --
 
 ALTER TABLE ONLY master.shifts
-    ADD CONSTRAINT shifts_pkey PRIMARY KEY (shift_id, company_id, plant_id);
+    ADD CONSTRAINT shifts_pkey PRIMARY KEY (shift_id, company_iot_id, plant_id);
 
 
 --
@@ -47,7 +47,7 @@ ALTER TABLE ONLY master.shifts
 --
 
 ALTER TABLE ONLY master.shifts
-    ADD CONSTRAINT shifts_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT shifts_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

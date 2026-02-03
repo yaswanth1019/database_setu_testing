@@ -35,7 +35,7 @@ CREATE TABLE config.alert_rules (
     enabled boolean DEFAULT true,
     created_at timestamp with time zone DEFAULT now(),
     value_type text DEFAULT 'String'::text,
-    company_id text,
+    company_iot_id integer,
     CONSTRAINT alert_rules_severity_check CHECK ((severity = ANY (ARRAY['Info'::text, 'Warning'::text, 'Critical'::text]))),
     CONSTRAINT alert_rules_value_type_check CHECK ((value_type = ANY (ARRAY['Numeric'::text, 'String'::text, 'Boolean'::text]))),
     CONSTRAINT check_numeric_format CHECK (((value_type <> 'Numeric'::text) OR (threshold_value ~ '^[0-9]+(\.[0-9]+)?$'::text)))
@@ -82,7 +82,7 @@ ALTER TABLE ONLY config.alert_rules
 --
 
 ALTER TABLE ONLY config.alert_rules
-    ADD CONSTRAINT alert_rules_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT alert_rules_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

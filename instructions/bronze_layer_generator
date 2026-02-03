@@ -7,7 +7,7 @@
 For every **Silver Table** provided, you must generate a **Bronze Table** using these strict mapping rules:
 1.  **Table Naming:** Prefix the table with `bronze.stg_` (e.g., `silver.machine_cycles` becomes `bronze.stg_machine_cycles`).
 2.  **Column Transformation:**
-    *   **Remove**: `company_id`, `machine_id`, `shift_id` (and any other calculated columns).
+    *   **Remove**: `company_id`, `machine_id`, `shift_id`, `actual_load_unload`, `actual_cycle_time` (and any other calculated columns).
         *   *Exception*: **Keep** `shift_id` for `stg_machine_focas` only.
     *   **Rename**:
         *   `time` -> `cnctimestamp` (General rule).

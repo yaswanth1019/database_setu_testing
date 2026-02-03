@@ -25,7 +25,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE silver.customer_feedback (
     "time" timestamp with time zone NOT NULL,
-    company_id text NOT NULL,
+    company_iot_id integer NOT NULL,
     machine_id text NOT NULL,
     user_id text,
     batch_no text,
@@ -49,7 +49,7 @@ CREATE INDEX customer_feedback_time_idx ON silver.customer_feedback USING btree 
 --
 
 ALTER TABLE ONLY silver.customer_feedback
-    ADD CONSTRAINT fk_cf_company FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT fk_cf_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --

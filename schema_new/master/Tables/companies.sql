@@ -24,10 +24,18 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE master.companies (
-    company_id SERIAL NOT NULL,
+    iot_id SERIAL NOT NULL,
+    company_id varchar(100) NOT NULL,
     company_name text NOT NULL,
+    address text,
+    state varchar(100),
+    country varchar(100),
+    pin_code varchar(20),
+    email_id varchar(100),
+    phone_no varchar(50),
     default_plant_id integer,
     effective_from_date timestamp with time zone,
+    effective_to_date timestamp with time zone,
     created_at timestamp with time zone DEFAULT now()
 );
 
@@ -37,7 +45,10 @@ CREATE TABLE master.companies (
 --
 
 ALTER TABLE ONLY master.companies
-    ADD CONSTRAINT companies_pkey PRIMARY KEY (company_id);
+    ADD CONSTRAINT companies_pkey PRIMARY KEY (iot_id);
+
+ALTER TABLE ONLY master.companies
+    ADD CONSTRAINT uq_company_id UNIQUE (company_id);
 
 
 --

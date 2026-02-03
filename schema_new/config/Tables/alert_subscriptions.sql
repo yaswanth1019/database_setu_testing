@@ -30,7 +30,7 @@ CREATE TABLE config.alert_subscriptions (
     method text,
     target_address text,
     created_at timestamp with time zone DEFAULT now(),
-    company_id text,
+    company_iot_id integer,
     CONSTRAINT alert_subscriptions_method_check CHECK ((method = ANY (ARRAY['Email'::text, 'SMS'::text, 'Push'::text])))
 );
 
@@ -75,7 +75,7 @@ ALTER TABLE ONLY config.alert_subscriptions
 --
 
 ALTER TABLE ONLY config.alert_subscriptions
-    ADD CONSTRAINT alert_subscriptions_company_id_fkey FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT alert_subscriptions_company_iot_id_fkey FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --
@@ -91,7 +91,7 @@ ALTER TABLE ONLY config.alert_subscriptions
 --
 
 ALTER TABLE ONLY config.alert_subscriptions
-    ADD CONSTRAINT fk_alert_user FOREIGN KEY (user_id, company_id) REFERENCES master.users(user_id, company_id);
+    ADD CONSTRAINT fk_alert_user FOREIGN KEY (user_id, company_iot_id) REFERENCES master.users(user_id, company_iot_id);
 
 
 --

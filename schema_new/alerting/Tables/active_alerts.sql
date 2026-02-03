@@ -24,7 +24,7 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE alerting.active_alerts (
-    company_id text NOT NULL,
+    company_iot_id integer NOT NULL,
     machine_id text NOT NULL,
     rule_id integer NOT NULL,
     start_time timestamp with time zone NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE alerting.active_alerts (
 --
 
 ALTER TABLE ONLY alerting.active_alerts
-    ADD CONSTRAINT active_alerts_pkey PRIMARY KEY (company_id, machine_id, rule_id);
+    ADD CONSTRAINT active_alerts_pkey PRIMARY KEY (company_iot_id, machine_id, rule_id);
 
 
 --
@@ -53,7 +53,7 @@ ALTER TABLE ONLY alerting.active_alerts
 --
 
 ALTER TABLE ONLY alerting.active_alerts
-    ADD CONSTRAINT fk_aa_company FOREIGN KEY (company_id) REFERENCES master.companies(company_id);
+    ADD CONSTRAINT fk_aa_company FOREIGN KEY (company_iot_id) REFERENCES master.companies(iot_id);
 
 
 --
@@ -61,7 +61,7 @@ ALTER TABLE ONLY alerting.active_alerts
 --
 
 ALTER TABLE ONLY alerting.active_alerts
-    ADD CONSTRAINT fk_active_machine FOREIGN KEY (machine_id, company_id) REFERENCES master.machine_info(machine_id, company_id);
+    ADD CONSTRAINT fk_active_machine FOREIGN KEY (machine_id, company_iot_id) REFERENCES master.machine_info(machine_id, company_iot_id);
 
 
 --
