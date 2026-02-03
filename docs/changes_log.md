@@ -150,5 +150,12 @@ I have completed a major schema wide refactor to align the Master, Silver, Bronz
 - **Refined columns**: Used `am_corrected_count` and `am_pending_count` as requested.
 - **Standardisation**: 
   - Updated `machine_pm_status` (Silver) to use `company_iot_id` and added a Foreign Key.
+  - Removed `shift_id` and `shift_name` from `machine_pm_status` (Silver & Bronze) as they are no longer required for PM tracking.
   - Converted `status` column to `VARCHAR(50)` in both AM and PM tables (Bronze & Silver) for consistency.
+
+#### 6. Detailed Program Production Monitoring
+- **New Tables**: Created `stg_machine_focas_program_production` (Bronze) and `machine_focas_program_production` (Silver) as requested.
+- **Enhanced Tracking**: Added support for tracking `program_no`, `actual_count`, `target_count`, along with standardized metrics (`std_cycle_time`, `std_load_unload`) as **integers**.
+- **Exception Alignment**: Configured these tables to follow the `stg_machine_focas` pattern, retaining `shift_id` and adding `logical_date` in the Bronze layer.
+- **Bronze Cleanup**: Explicitly removed `shift_name` from all Bronze tables as it is a master/calculated attribute not required for raw ingestion.
 

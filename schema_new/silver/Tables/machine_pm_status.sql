@@ -27,8 +27,6 @@ CREATE TABLE silver.machine_pm_status (
     logical_date timestamp with time zone NOT NULL,
     company_iot_id integer NOT NULL,
     machine_iot_id integer NOT NULL,
-    shift_id integer,
-    shift_name varchar(50),
     status varchar(50),
     pm_corrected_count integer,
     pm_pending_count integer,

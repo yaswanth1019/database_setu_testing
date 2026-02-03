@@ -7,14 +7,14 @@
 For every **Silver Table** provided, you must generate a **Bronze Table** using these strict mapping rules:
 1.  **Table Naming:** Prefix the table with `bronze.stg_` (e.g., `silver.machine_cycles` becomes `bronze.stg_machine_cycles`).
 2.  **Column Transformation:**
-    *   **Remove**: `company_id`, `machine_id`, `shift_id`, `actual_load_unload`, `actual_cycle_time` (and any other calculated columns).
-        *   *Exception*: **Keep** `shift_id` for `stg_machine_focas`, `stg_machine_pm_status`, and `stg_machine_am_status` only.
+    *   **Remove**: `company_id`, `machine_id`, `shift_id`, `shift_name`, `actual_load_unload`, `actual_cycle_time` (and any other calculated columns).
+        *   *Exception*: **Keep** `shift_id` for `stg_machine_focas`, `stg_machine_am_status`, and `stg_machine_focas_program_production` only.
     *   **Rename**:
         *   `time` -> `cnctimestamp` (General rule).
         *   *Exception*: Keep `cycle_start` / `cycle_end` for Cycle tables.
         *   *Exception*: Keep `down_start` / `down_end` for Downtime tables.
     *   **Add**:
-        *   *Exception*: **Add** `logical_date` (TIMESTAMPTZ) for `stg_machine_focas`, `stg_machine_pm_status`, and `stg_machine_am_status` only.
+        *   *Exception*: **Add** `logical_date` (TIMESTAMPTZ) for `stg_machine_focas`, `stg_machine_pm_status`, `stg_machine_am_status`, and `stg_machine_focas_program_production` only.
 3.  **Metadata Injection:** Every Bronze table **MUST** include these five system columns:
     *   `id BIGINT GENERATED ALWAYS AS IDENTITY`: The absolute tie-breaker for watermarking.
     *   `ingested_at TIMESTAMPTZ DEFAULT NOW()`: **Primary Partition Key**.
