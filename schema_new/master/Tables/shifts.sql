@@ -24,12 +24,16 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE master.shifts (
-    shift_id text NOT NULL,
+    id serial4 NOT NULL,
     company_iot_id integer NOT NULL,
-    plant_id text NOT NULL,
-    shift_name text,
-    start_time time without time zone,
-    duration_hrs numeric,
+    shift_name varchar(20) DEFAULT NULL::character varying NULL,
+    shift_id int2 DEFAULT 0 NOT NULL,
+    is_running bool DEFAULT false NULL,
+    from_day int2 DEFAULT 0 NULL,
+    to_day int2 DEFAULT 0 NULL,
+    from_time timestamp NULL,
+    to_time timestamp NULL,
+    updated_ts timestamp NULL,
     created_at timestamp with time zone DEFAULT now()
 );
 
@@ -39,7 +43,7 @@ CREATE TABLE master.shifts (
 --
 
 ALTER TABLE ONLY master.shifts
-    ADD CONSTRAINT shifts_pkey PRIMARY KEY (shift_id, company_iot_id, plant_id);
+    ADD CONSTRAINT shifts_pkey PRIMARY KEY (id);
 
 
 --

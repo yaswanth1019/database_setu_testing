@@ -1,21 +1,25 @@
-# SETU Data Dictionary (v1.7.0)
+# SETU Data Dictionary (v2.0.0)
 
-- **Version**: 1.7.0
-- **Status**: **Active Development**
+- **Version**: 2.0.0
+- **Status**: **Active Development (Standardized Surrogate Keys)**
 - **Created**: January 6, 2026
-- **Last Updated**: January 9, 2026
+- **Last Updated**: February 4, 2026
 - **Architecture**: TimescaleDB (PostgreSQL)
-- **Legacy Source**: MSSQL MVP Schema
+- **Primary Source**: `schema_new/` folder (standardized schema)
 
 ---
 
 ## 1. Executive Summary
 
-This document serves as the **Single Source of Truth** for the SETU Data Platform. It bridges the gap between the legacy MSSQL schema and the new TimescaleDB architecture, documenting valid tables, relationships, and data types.
+This document serves as the **Single Source of Truth** for the SETU Data Platform. It reflects the recent standardization of the schema, moving towards `iot_id` surrogate keys, standardizing time columns to `logical_date` in Silver, and implementing a 30-day retention Bronze (Raw) layer for high-scale scalability.
 
-### Architectural Change Log
+### Core Architectural Principles
 > [!IMPORTANT]
-> **Shift Logic Change**: In legacy MSSQL, shift logic was calculated at **Read Time** (via `s_GetShiftTime`). In the new architecture, shift logic is resolved at **Write Time** (Ingestion). The `shift_id` is calculated by `bronze.proc_ingest_payload` and persisted into all Silver tables to optimize dashboard aggregation.
+> **Surrogate Keys**: The schema now uses `iot_id` (Integer) as the primary link between hardware (`master.device_info`), machines (`master.machine_info`), and companies (`master.companies`).
+> 
+> **Write-Time Shift Resolution**: Shifts are resolved during the Bronze to Silver ingestion and stored as integers (`shift_id`) in all Silver tables to ensure high-performance dashboard aggregations without complex run-time joins.
+>
+> **Logical Dates**: Silver tables use `logical_date` (TIMESTAMPTZ) to represent the business date of the event, decoupled from the ingestion timestamp `ingested_at` found in Bronze.
 
 ---
 
@@ -28,14 +32,17 @@ erDiagram
     COMPANIES ||--o{ USERS : "authenticates"
     COMPANIES ||--o{ ALERT_RULES : "configures"
     
-    PLANTS ||--o{ MACHINE_INFO : "houses"
     PLANTS ||--o{ SHIFTS : "schedules"
+    
+    COMPANIES ||--o{ MACHINE_INFO : "owns"
+    DEVICE_INFO ||--o1 MACHINE_INFO : "connected to"
+    MACHINE_INFO ||--o{ PLANT_MACHINE_MAPPING : "mapped to"
+    PLANTS ||--o{ PLANT_MACHINE_MAPPING : "contains"
     
     MACHINE_INFO ||--o{ MACHINE_ASSETS : "describes"
     MACHINE_INFO ||--o{ PRODUCTION_TARGETS : "targets"
-    MACHINE_INFO ||--o{ MACHINE_HEALTH_SETTINGS : "monitors"
     
-    %% Silver Schema (Facts) - All have FK to Machine/Company
+    %% Silver Schema (Facts)
     MACHINE_INFO ||--o{ MACHINE_STATUS : "telemetry"
     MACHINE_INFO ||--o{ MACHINE_CYCLES : "telemetry"
     MACHINE_INFO ||--o{ MACHINE_ALARMS : "telemetry"
@@ -43,172 +50,80 @@ erDiagram
     MACHINE_INFO ||--o{ MACHINE_ENERGY : "telemetry"
     MACHINE_INFO ||--o{ MACHINE_FOCAS : "telemetry"
     MACHINE_INFO ||--o{ MACHINE_TOOL_USAGE : "telemetry"
-    
-    %% Entities
-    COMPANIES {
-        int company_id PK
-        text company_name
-        int default_plant_id
-    }
-    
-    MACHINE_INFO {
-        varchar machine_id
-        int company_id FK
-        int device_iot_id FK
-        int iot_id PK
-    }
-
-    DEVICE_INFO {
-        int device_iot_id PK
-        varchar device_id
-        boolean is_assigned
-    }
-
-    PLANT_MACHINE_MAPPING {
-        int mapping_id PK
-        int plant_id FK
-        int machine_iot_id FK
-    }
-
-    MACHINE_STATUS {
-        timestamptz time
-        int company_id FK
-        int machine_iot_id FK
-        int shift_id
-        varchar(50) status
-    }
-
-    MACHINE_CYCLES {
-        timestamptz cycle_start
-        timestamptz cycle_end
-        int company_id FK
-        int machine_iot_id FK 
-        int shift_id
-        int actual_cycle_time
-    }
-    
-    ALERT_RULES ||--o{ ALERT_HISTORY : "triggers"
-    ALERT_RULES {
-        int rule_id PK
-        text company_id FK
-        text metric
-        text threshold_value
-    }
+    MACHINE_INFO ||--o{ MACHINE_AM_STATUS : "telemetry"
+    MACHINE_INFO ||--o{ MACHINE_PM_STATUS : "telemetry"
 ```
 
 ---
 
-## 3. New Schema Mapping (Schema [TimescaleDB] -> Schema[TimescaleDB])
+## 3. Layer Definitions
 
-| Schema Table | Schema Table | Status | Key Changes |
+### 3.1. Bronze Layer (Raw Ingestion)
+**Role**: High-velocity landing zone.
+- **Retention**: 30 Days (TimescaleDB Drop Chunks).
+- **Standards**: Every table includes `id` (BIGINT Identity), `ingested_at` (Partition Key), `kafka_offset`, `device_iot_id`, and `machine_iot_id`.
+
+| Table | Matching Silver | Columns | Description |
 |:---|:---|:---|:---|
-| `master.machine_info` | `master.machine_info` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id` persisted. |
-| `MachineWiseCycleDetails_MVP` | `silver.machine_cycles` | **Pending** | `UpdatedTS` -> `cycle_start`. Added `shift_id`. |
-| `MachineWiseDownDetails_MVP` | `silver.machine_downtime` | **Pending** | `UpdatedTS` -> `down_start`. Added `shift_id`. |
-| `MachineWiseAlarmDetails_MVP` | `silver.machine_alarms` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id`. |
-| `MachineWiseEnergyDetails_MVP` | `silver.machine_energy` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id`. Separated Servo/Spindle. |
-| `MachineWiseFocasDetails_MVP` | `silver.machine_focas` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id`. |
-| `MachineWiseToolDetails_MVP` | `silver.machine_tool_usage` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id`. |
-| `MachineWisePMDetails_MVP` | `silver.machine_pm_status` | **Pending** | `UpdatedTS` -> `time`. Added `shift_id`. |
-| `CustomerRatingTransaction_MVP`| `silver.customer_feedback` | **Pending** | Normalized implementation. |
-| `MachineInformation` | `master.machine_info` | **Pending** | Normalized. `Machine` + `Company` composite key. |
-| `Company` | `master.companies` | **Pending** | - |
-| `PlantInformation` | `master.plants` | **Pending** | - |
+| `bronze.raw_machine_status` | `silver.machine_status` | `id`, `ingested_at`, `kafka_offset`, `device_iot_id`, `machine_iot_id`, `cnctimestamp`, `status` | Raw telemetry snapshot. |
+| `bronze.raw_machine_cycles` | `silver.machine_cycles` | `id`, `ingested_at`, `kafka_offset`, `device_iot_id`, `machine_iot_id`, `cycle_start`, `cycle_end`, `program_no`, `std_load_unload`, `std_cycle_time` | Granular cycle records. |
+| `bronze.raw_machine_am_status`| `silver.machine_am_status` | `id`, `ingested_at`, `kafka_offset`, `device_iot_id`, `machine_iot_id`, `logical_date`, `shift_id`, `cnctimestamp`, `status`, `am_corrected_count`, `am_pending_count` | Autonomous Maintenance logs. |
+| `bronze.raw_machine_pm_status`| `silver.machine_pm_status` | `id`, `ingested_at`, `kafka_offset`, `device_iot_id`, `machine_iot_id`, `logical_date`, `cnctimestamp`, `status`, `pm_corrected_count`, `pm_pending_count` | Preventative Maintenance logs. |
+| `bronze.raw_machine_focas_program_production` | `silver.machine_focas_program_production` | `id`, `ingested_at`, `kafka_offset`, `device_iot_id`, `machine_iot_id`, `logical_date`, `shift_id`, `program_no`, `actual_count`, `target_count`, `std_cycle_time`, `std_load_unload` | Multi-program production telemetry. |
+
+### 3.2. Master Layer (Dimensions)
+**Role**: Global reference data.
+
+| Table | PK | Columns | Description |
+|:---|:---|:---|:---|
+| `master.companies` | `iot_id` | `iot_id` (PK), `company_id` (**Legacy**), `company_name`, `address`, `state`, `country`, `pin_code`, `email_id`, `phone_no`, `default_plant_id` | Multi-tenant root entity. |
+| `master.plants` | `plant_id` | `plant_id` (PK), `company_iot_id` (FK), `plant_name`, `plant_city` | Industrial site registry. |
+| `master.machine_info` | `iot_id` | `iot_id` (PK), `machine_id` (**Legacy**), `company_iot_id` (FK), `device_iot_id` (FK), `ip_address`, `port_no` | Unified machine asset record. |
+| `master.device_info` | `device_iot_id` | `device_iot_id` (PK), `device_id` (**Legacy**), `description`, `is_assigned`, `created_by`, `updated_at` | Hardware registry. |
+| `master.shifts` | `id` | `id` (PK), `company_iot_id` (FK), `shift_name`, `shift_id` (**Logic ID**), `is_running`, `from_day`, `to_day`, `from_time`, `to_time`, `updated_ts` | Dynamic scheduling logic. |
+| `master.users` | `id` | `user_id` (**Legacy PK**), `company_iot_id` (**FK PK**), `user_no`, `full_name`, `role`, `plant_id` | RBAC and tenancy. |
+| `master.machine_assets` | `composite` | `machine_iot_id` (FK), `company_iot_id` (FK), `supplier_name`, `model_number`, `manufacturing_year`, `commissioned_date`, `subscription_tier` | Asset metadata. |
+| `master.plant_machine_mapping` | `mapping_id` | `mapping_id` (PK), `plant_id` (FK), `machine_iot_id` (FK) | Asset assignment to plants. |
+
+### 3.3. Silver Layer (Normalized Facts)
+**Role**: Analytical core. Partitioned by `logical_date`.
+- **Standard**: All tables use `company_iot_id` and `machine_iot_id` for efficient filtering.
+
+| Table | Timestamp | Columns | Purpose |
+|:---|:---|:---|:---|
+| `silver.machine_status` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `program_no`, `status`, `operator_id`, `target` | Real-time state history. |
+| `silver.machine_cycles` | `cycle_start` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `cycle_start`, `cycle_end`, `program_no`, `std_load_unload`, `std_cycle_time`, `actual_load_unload`, `actual_cycle_time` | Individual part production. |
+| `silver.machine_downtime` | `down_start` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `down_start`, `down_end`, `program_no`, `down_id`, `down_threshold` | OEE Availability loss logs. |
+| `silver.machine_energy` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `category`, `servo_energy`, `spindle_energy`, `total_energy` | Resource consumption logs. |
+| `silver.machine_am_status` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `status`, `am_corrected_count`, `am_pending_count` | Autonomous Maintenance. |
+| `silver.machine_pm_status` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `status`, `pm_corrected_count`, `pm_pending_count` | Preventative Maintenance. |
+| `silver.machine_focas_program_production` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `program_no`, `actual_count`, `target_count`, `std_load_unload`, `std_cycle_time` | CNC program analytics. |
+| `silver.machine_tool_usage` | `logical_date` | `logical_date`, `company_iot_id` (FK), `machine_iot_id` (FK), `shift_id`, `shift_name`, `tool_no`, `target_count`, `actual_count` | Resource consumption logs. |
+
+### 3.4. Config Layer
+**Role**: Operational settings and alert state configuration.
+
+| Table/Proc | Layer | Columns | Description |
+|:---|:---|:---|:---|
+| `config.alert_rules` | Config | `rule_id` (PK), `rule_name`, `description`, `metric`, `condition_operator`, `threshold_value`, `severity`, `enabled`, `company_iot_id` | Global/Tenant rule config. |
+| `config.alert_subscriptions`| Config | `subscription_id` (PK), `rule_id`, `user_id`, `method`, `target_address`, `company_iot_id` | Notification routing. |
+
+- **Monitoring**: Real-time observability for high-frequency writes.
+
+### 3.5. ETL Layer (Staging)
+**Role**: Transient, high-speed flight zone for data enrichment.
+- **Standards**: All tables are `UNLOGGED` and use `raw_id` to link to Bronze.
+
+| Table | Source | Tracing | Purpose |
+|:---|:---|:---|:---|
+| `etl.stg_machine_status` | `bronze.raw_machine_status` | `raw_id` | Enriched machine state. |
+| `etl.stg_machine_cycles` | `bronze.raw_machine_cycles` | `raw_id` | Cycle calculations. |
+| `etl.stg_machine_alarms` | `bronze.raw_machine_alarms` | `raw_id` | Alarm buffering. |
+| `etl.stg_machine_downtime`| `bronze.raw_machine_downtime`| `raw_id` | Downtime categorization. |
 
 ---
 
-## 4. Schema Definitions
+## 4. Business Logic (Procedures & Functions)
 
-### 4.1. Bronze Layer (Ingestion)
-**Role**: Landing zone. High-volume write throughput.
-- **Processing**: `proc_ingest_payload` shreds JSONB into Silver tables and calculates `shift_id`.
-
-| Table | Status | Columns | Description |
-|:---|:---|:---|:---|
-| `bronze.raw_telemetry` | **Pending** | `ingest_time` (TS), `device_id`, `iot_id`, `company_id` (FK), `payload` (JSONB), `processed` (BOOL), `batch_id` (UUID) | Raw replication stream. |
-| `bronze.migration_metadata`| **Pending** | `id` (PK), `run_id` (UUID), `table_name`, `rows_migrated`, `min_timestamp`, `max_timestamp`, `company_ids` | Audit trail for migration batches. |
-| `bronze.dead_letter_queue` | **Pending** | `time` (TS), `payload` (JSONB), `error_reason`, `company_id` | Storage for malformed/orphan packets. |
-
-### 4.2. Master Layer (Dimensions)
-**Role**: Reference data for joins and filtering.
-
-|:---|:---|:---|:---|:---|
-| Table | Status | PK | Columns | Notes |
-|:---|:---|:---|:---|:---|
-| `master.companies` | **Pending** | `company_id` (SERIAL) | `company_name`, `default_plant_id` | Root tenant entity. |
-| `master.plants` | **Pending** | `plant_id` (SERIAL) | `company_id`, `plant_name`, `plant_city` | Physical locations. |
-| `master.machine_info` | **Pending** | `iot_id` (SERIAL) | `machine_id`, `company_id`, `device_iot_id` | Core asset registry. Decoupled from Plant. |
-| `master.plant_machine_mapping` | **New** | `mapping_id` (SERIAL) | `plant_id`, `machine_iot_id` | Maps machines to plants. |
-| `master.device_info` | **New** | `device_iot_id` (SERIAL) | `device_id`, `description`, `is_assigned` | Hardware registry. |
-| `master.machine_assets` | **Pending** | `machine_iot_id, company_id` | `subscription_tier`, `is_mvp2_enabled` | Digital twin / Contract data. |
-| `master.shifts` | **Pending** | `shift_id, company_id, plant_id`| `shift_name`, `start_time`, `duration_hrs` | Scheduling logic. |
-| `master.production_targets`| **Pending** | `target_id` | `machine_id`, `company_id`, `shift_id`, `program_no`, `target_parts_per_hour` | OEE denominators. |
-| `master.users` | **Pending** | `user_id, company_id` | `full_name`, `role`, `plant_id` | Auth & Access. |
-| `master.downtime_codes` | **Pending** | `down_id` (SERIAL) | `down_code`, `description`, `category` | Global standardization (No Company ID). |
-
-### 4.3. Silver Layer (Enriched Facts)
-**Role**: Queryable history. Hypertables.
-**Common Columns**: All tables have `company_id`, `machine_id`, and **`shift_id`**.
-
-| Table | Status | Primary Timestamp | Specific Columns | Retention |
-|:---|:---|:---|:---|:---|
-| `silver.machine_status` | **Pending** | `time` | `status`, `program_no`, `operator_id`, `target` | 1 Year |
-| `silver.machine_cycles` | **Pending** | `cycle_start` | `cycle_end`, `program_no`, `std_cycle_time`, `actual_cycle_time`, `actual_load_unload`, `std_load_unload`, `down_threshold` | 1 Year |
-| `silver.machine_alarms` | **Pending** | `time` | `alarm_no`, `alarm_desc` | 1 Year |
-| `silver.machine_downtime` | **Pending** | `down_start` | `down_end`, `down_code`, `down_id`, `down_threshold` | 1 Year |
-| `silver.machine_energy` | **Pending** | `time` | `category` (Main/Servo/Spindle), `servo_energy`, `spindle_energy`, `total_energy` | 1 Year |
-| `silver.machine_focas` | **Pending** | `time` | `part_count`, `rej_count`, `pot` (PowerOn), `ot` (Operating), `ct` (Cutting) | 1 Year |
-| `silver.machine_tool_usage` | **Pending** | `time` | `tool_no`, `target_count`, `actual_count` | 1 Year |
-| `silver.machine_pm_status` | **Pending** | `time` | `pm_corrected_count`, `pm_pending_count`, `status` | 2 Years |
-
-### 4.4. Gold Layer (Aggregates)
-**Role**: High-speed dashboards. Continuous Aggregates (CAGGs) and Functions.
-
-#### Continuous Aggregates (V017)
-
-| View | Status | Bucket | Source | Aggregations |
-|:---|:---|:---|:---|:---|
-| `gold.machine_downtime_hourly` | **Pending** | 1 Hour | `silver.machine_focas` | `total_downtime_seconds` (POT-OT), `total_part_count`, `total_operating_time` |
-| `gold.machine_energy_hourly` | **Pending** | 1 Hour | `silver.machine_energy` | `total_energy_consumption` by category |
-| `gold.machine_cycle_stats_hourly` | **Pending** | 1 Hour | `silver.machine_cycles` | `total_cycles`, `avg_cycle_time`, `total_load_unload_exceeded` |
-| `gold.hourly_production_stats` | **Pending** | 1 Hour | `silver.machine_cycles` | `total_cycles`, `avg_cycle_time`, `avg_std_time` |
-| `gold.hourly_downtime_stats` | **Pending** | 1 Hour | `silver.machine_downtime` | `total_downtime_sec`, `stop_count` |
-| `gold.daily_production_stats` | **Pending** | 1 Day | `gold.hourly...` | Rollup of hourly stats to daily |
-| `gold.v_production_dashboard` | **Pending** | - | `gold.hourly...` | Enriched view with Plant/Machine names |
-| `gold.v_oee_dashboard` | **Pending** | 1 Day | `gold.daily...` | Availability, Performance, Quality metrics |
-
-#### Gold Functions (Reporting API)
-
-| Function | Arguments | Returns | Purpose |
-|:---|:---|:---|:---|
-| `gold.get_downtime_summary()` | `machine_id`, `company_id`, `start`, `end` | `bucket`, `downtime_seconds`, `part_count` | Downtime analytics for shift/month |
-| `gold.get_energy_summary()` | `machine_id`, `company_id`, `start`, `end` | `bucket`, `category`, `total_energy` | Energy consumption by category |
-| `gold.get_cycle_summary()` | `machine_id`, `company_id`, `start`, `end` | `bucket`, `total_cycles`, `avg_cycle_time` | Cycle performance analytics |
-| `gold.get_home_screen_stats()` | `company_id` | `total`, `running`, `stopped`, `idle` | Live dashboard machine counts |
-
-### 4.5. Config & Alerting
-**Role**: Runtime configuration and operational logs.
-
-| Table | Status | PK | columns |
-|:---|:---|:---|:---|
-| `config.alert_rules` | **Pending** | `rule_id` | `metric`, `threshold_value`, `condition_operator`, `company_id` |
-| `config.alert_subscriptions`| **Pending** | `subscription_id` | `rule_id`, `user_id`, `method` |
-| `alerting.history` | **Pending** | `alert_id, time` | `rule_id`, `machine_id`, `message`, `status`, `resolved_at` |
-| `alerting.active_alerts` | **Pending** | `company_id, machine_id, rule_id` | `start_time`, `last_checked_at` |
-
----
-
-## 5. Stored Procedures (Business Logic)
-
-### `bronze.proc_ingest_payload(jsonb, boolean)`
-**Core Data Pipeline**:
-1.  **Extracts** identifiers (DeviceID, IOTID).
-2.  **Resolves** `machine_id`, `company_id`, `plant_id` via lookup.
-3.  **Calculates** `shift_id` using `master.get_shift_id(plant, timestamp)`.
-4.  **Routes** data to appropriate Silver tables (`machine_status`, `machine_cycles`, etc.) based on JSON keys.
-5.  **Persists** `shift_id` into every Silver record for optimizing read-time aggregation.
-
-### `master.get_shift_id(plant_id, timestamp)`
-**Shift Resolution**:
-- Determines the active shift for a given plant and time.
-- Handles cross-day shifts (e.g., Shift C: 10 PM - 6 AM).
+### Ingestion Logic
+- **`etl.proc_ingest_payload()`** (Planned): The future "Traffic Warden" of the system. Will replace legacy `bronze.proc_ingest_payload` with standardized multi-layer routing.

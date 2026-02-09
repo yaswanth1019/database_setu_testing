@@ -54,5 +54,13 @@ ALTER TABLE ONLY silver.machine_focas_program_production
 
 
 --
+-- Name: machine_focas_program_production fk_mfpp_machine; Type: FK CONSTRAINT; Schema: silver; Owner: -
+--
+
+ALTER TABLE ONLY silver.machine_focas_program_production
+    ADD CONSTRAINT fk_mfpp_machine FOREIGN KEY (machine_iot_id) REFERENCES master.machine_info(iot_id);
+
+
+--
 -- PostgreSQL database dump complete
 --

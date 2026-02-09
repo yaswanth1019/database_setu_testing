@@ -159,3 +159,31 @@ I have completed a major schema wide refactor to align the Master, Silver, Bronz
 - **Exception Alignment**: Configured these tables to follow the `stg_machine_focas` pattern, retaining `shift_id` and adding `logical_date` in the Bronze layer.
 - **Bronze Cleanup**: Explicitly removed `shift_name` from all Bronze tables as it is a master/calculated attribute not required for raw ingestion.
 
+#### 7. Shift Master Refinement
+- **Schema Update**: Rebuilt `master.shifts` table with a new `id serial4` primary key and optimized types (`int2` for `shift_id`, `from_day`, `to_day`).
+- **Additional Attributes**: Added `is_running`, `from_time`, `to_time`, and `updated_ts` to support dynamic shift management.
+
+#### 8. Silver Layer Referential Integrity Reinforcement
+- **Foreign Keys**: Added `machine_iot_id` foreign key constraints to all 10 Silver telemetry tables (`machine_status`, `machine_cycles`, `machine_alarms`, `machine_downtime`, `machine_energy`, `machine_focas`, `machine_focas_program_production`, `machine_am_status`, `machine_pm_status`, `machine_tool_usage`).
+- **Standardization**: All constraints follow the naming pattern `fk_<shortname>_machine` and reference `master.machine_info(iot_id)`.
+
+#### 9. Bronze Schema Cleanup
+- **Decommissioned Tables**: Deleted legacy tables `dead_letter_queue`, `migration_metadata`, and `raw_telemetry` from the `bronze` schema in `schema_new`. Error handling and raw ingestion are now handled by the standardized `stg_` pipeline.
+
+#### 10. ETL Schema Initialization & Bronze Cleanup
+- **ETL Schema**: Created a new `etl` schema in `schema_new/etl/` with a dedicated directory structure for Tables, Procedures, and Views. This will house the unified ingestion and transformation logic.
+- **Procedure Cleanup**: Deleted legacy stored procedures `proc_ingest_payload.sql` and `proc_process_bronze_batch.sql` from the `bronze` schema to prevent architectural ambiguity.
+
+#### 12. Bronze and ETL Schema Refactoring
+- **Bronze Prefix Swap**: Renamed all tables in `bronze` from `stg_` to `raw_` (e.g., `bronze.raw_machine_status`). Updated all SQL definitions, indexes, and partition logic to reflect this.
+- **ETL Staging Layer**: Initialized 10 `UNLOGGED` staging tables in the `etl` schema using `stg_` prefixes. These are replicated from Bronze but optimized for transformation:
+    - Removed `ingested_at` and `kafka_offset`.
+    - Renamed `id` to `raw_id` for traceability.
+- **Instructional Governance**:
+    - Updated `instructions/bronze_layer_generator` for the new `raw_` standard.
+    - Created `instructions/etl_schema_generator.md` to govern the ETL staging layer.
+
+#### 11. Silver and Alerting Decommissioning
+- **Silver Cleanup**: Deleted `customer_feedback.sql` table definition as the feedback loop is being relocated/rethought.
+- **Alerting Decommissioning**: Completely removed the `alerting` schema directory (`schema_new/alerting/`). Live alert state and history are now outside the core telemetry scope.
+

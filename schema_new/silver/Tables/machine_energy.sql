@@ -53,6 +53,14 @@ ALTER TABLE ONLY silver.machine_energy
 
 
 --
+-- Name: machine_energy fk_me_machine; Type: FK CONSTRAINT; Schema: silver; Owner: -
+--
+
+ALTER TABLE ONLY silver.machine_energy
+    ADD CONSTRAINT fk_me_machine FOREIGN KEY (machine_iot_id) REFERENCES master.machine_info(iot_id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
