@@ -182,6 +182,7 @@ I have completed a major schema wide refactor to align the Master, Silver, Bronz
 - **Instructional Governance**:
     - Updated `instructions/bronze_layer_generator` for the new `raw_` standard.
     - Created `instructions/etl_schema_generator.md` to govern the ETL staging layer.
+- **Environment Management**: Moved hardcoded directory paths from scripts into environment variables (`.env`). Added `.env.example` for project portability.
 
 #### 11. Silver and Alerting Decommissioning
 - **Silver Cleanup**: Deleted `customer_feedback.sql` table definition as the feedback loop is being relocated/rethought.
