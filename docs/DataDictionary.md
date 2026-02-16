@@ -121,6 +121,15 @@ erDiagram
 | `etl.stg_machine_alarms` | `bronze.raw_machine_alarms` | `raw_id` | Alarm buffering. |
 | `etl.stg_machine_downtime`| `bronze.raw_machine_downtime`| `raw_id` | Downtime categorization. |
 
+### 3.6. MTB Catalog Layer
+**Role**: Global reference for Machine Tool Builders and their assets.
+
+| Table | Layer | Columns | Description |
+|:---|:---|:---|:---|
+| `mtb_catalog.mtb` | Catalog | `mtb_id` (PK), `name`, `short_name`, `description` | Machine Tool Builder registry. |
+| `mtb_catalog.machine_model` | Catalog | `model_id` (PK), `mtb_id` (FK), `model_name`, `model_code`, `model_type`, `description`, `status` | Models associated with specific builders. |
+| `mtb_catalog.model_asset` | Catalog | `asset_id` (PK), `model_id` (FK), `asset_type` (Check), `asset_title`, `blob_container`, `blob_path`, `blob_url`, `file_format`, `language`, `version`, `is_primary` | Manuals, brochures, and media assets. |
+
 ---
 
 ## 4. Business Logic (Procedures & Functions)

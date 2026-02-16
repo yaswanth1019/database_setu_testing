@@ -6,10 +6,10 @@ CREATE TABLE bronze.raw_machine_tool_usage (
     id BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
     ingested_at timestamp with time zone DEFAULT now() NOT NULL,
     kafka_offset bigint,
-    device_iot_id integer NOT NULL,
+    device_id text NOT NULL,
     machine_iot_id integer NOT NULL,
     cnctimestamp timestamp with time zone,
-    tool_no varchar(50) NOT NULL,
+    tool_no text NOT NULL,
     target_count integer,
     actual_count integer
 );
@@ -31,5 +31,6 @@ CREATE INDEX idx_raw_machine_tool_usage_watermark ON bronze.raw_machine_tool_usa
 -- Hypertable & Retention
 --
 
-SELECT create_hypertable('bronze.raw_machine_tool_usage', 'ingested_at', chunk_time_interval => INTERVAL '1 day');
-SELECT add_retention_policy('bronze.raw_machine_tool_usage', INTERVAL '30 days');
+SELECT create_hypertable(relation => 'bronze.raw_machine_tool_usage'::regclass, time_column_name => 'ingested_at'::name, chunk_time_interval => INTERVAL '1 day');
+SELECT add_retention_policy(relation => 'bronze.raw_machine_tool_usage'::regclass, drop_after => INTERVAL '30 days');
+

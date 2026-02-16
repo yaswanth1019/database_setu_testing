@@ -6,11 +6,11 @@ CREATE TABLE bronze.raw_machine_focas_program_production (
     id BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
     ingested_at timestamp with time zone DEFAULT now() NOT NULL,
     kafka_offset bigint,
-    device_iot_id integer NOT NULL,
+    device_id text NOT NULL,
     machine_iot_id integer NOT NULL,
     logical_date timestamp with time zone,
     shift_id integer,
-    program_no varchar(50),
+    program_no text,
     actual_count integer,
     target_count integer,
     std_load_unload integer,
@@ -35,5 +35,6 @@ CREATE INDEX idx_raw_machine_fpp_watermark ON bronze.raw_machine_focas_program_p
 -- Hypertable & Retention
 --
 
-SELECT create_hypertable('bronze.raw_machine_focas_program_production', 'ingested_at', chunk_time_interval => INTERVAL '1 day');
-SELECT add_retention_policy('bronze.raw_machine_focas_program_production', INTERVAL '30 days');
+SELECT create_hypertable(relation => 'bronze.raw_machine_focas_program_production'::regclass, time_column_name => 'ingested_at'::name, chunk_time_interval => INTERVAL '1 day');
+SELECT add_retention_policy(relation => 'bronze.raw_machine_focas_program_production'::regclass, drop_after => INTERVAL '30 days');
+

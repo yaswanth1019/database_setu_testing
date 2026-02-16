@@ -6,11 +6,11 @@ CREATE TABLE bronze.raw_machine_cycles (
     id BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
     ingested_at timestamp with time zone DEFAULT now() NOT NULL,
     kafka_offset bigint,
-    device_iot_id integer NOT NULL,
+    device_id text NOT NULL,
     machine_iot_id integer NOT NULL,
     cycle_start timestamp with time zone,
     cycle_end timestamp with time zone,
-    program_no varchar(50),
+    program_no text,
     std_load_unload integer,
     std_cycle_time integer,
     down_threshold integer
@@ -33,5 +33,6 @@ CREATE INDEX idx_raw_machine_cycles_watermark ON bronze.raw_machine_cycles USING
 -- Hypertable & Retention
 --
 
-SELECT create_hypertable('bronze.raw_machine_cycles', 'ingested_at', chunk_time_interval => INTERVAL '1 day');
-SELECT add_retention_policy('bronze.raw_machine_cycles', INTERVAL '30 days');
+SELECT create_hypertable(relation => 'bronze.raw_machine_cycles'::regclass, time_column_name => 'ingested_at'::name, chunk_time_interval => INTERVAL '1 day');
+SELECT add_retention_policy(relation => 'bronze.raw_machine_cycles'::regclass, drop_after => INTERVAL '30 days');
+

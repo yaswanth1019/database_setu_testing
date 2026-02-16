@@ -34,8 +34,8 @@
     3.  **Chunking**: Use **1-day chunks**.
     4.  **Retention**: **30 days**.
 *   **Standards**:
-    *   **Prefix**: `bronze.stg_`.
-    *   **System Columns**: `id` (Identity), `ingested_at`, `kafka_offset`, `machine_iot_id`, `device_iot_id`.
+    *   **Prefix**: `bronze.raw_`.
+    *   **System Columns**: `id` (Identity), `ingested_at`, `kafka_offset`, `machine_iot_id`, `device_id`.
 
 *   **Rationale (The Warehouse Analogy)**:
     *   **Bronze is a warehouse receiving boxes**. Every day, trucks drop off boxes. Some contain today's items, some contain last week's.
@@ -48,3 +48,112 @@
     *   **The "Watermark Anchor"**:
         *   We force an `id BIGINT IDENTITY` column on every Bronze table.
         *   This acts as the absolute tie-breaker. If 1,000 machines report events at the exact same millisecond, the `id` allows the ETL process to know exactly where to restart (`WHERE id > last_processed_id`) without losing or duplicating data.
+
+---
+
+## 3. Silver Layer Architecture
+
+*   **Context**: The Silver Layer holds cleaned, enriched, and structured data. Data volume varies significantly between different types of machine events.
+*   **Decision**:
+    1.  **Hypertable Classification**:
+        *   **High Frequency (7-day chunks)**: High-volume operational data.
+            *   `machine_cycles`
+            *   `machine_downtime`
+        *   **Low Frequency (1-month chunks)**: Lower volume, status, or summary data.
+            *   `machine_alarms`
+            *   `machine_energy`
+            *   `machine_focas`
+            *   `machine_focas_program_production`
+            *   `machine_tool_usage`
+            *   `machine_am_status`
+            *   `machine_pm_status`
+    2.  **Standard Tables (No Hypertable)**:
+        *   `machine_status`: Stores the *current* or latest state. Not a time-series history log.
+    3.  **Compression**:
+        *   Enable **TimescaleDB Native Compression** to reduce storage costs.
+        *   **Policy**:
+            *   **High Frequency**: Compress chunks older than **30 days** (allows for late-arriving data/corrections to stay uncompressed for a buffer period).
+            *   **Low Frequency**: Compress chunks older than **3 months** (data is often accessed for monthly reporting).
+*   **Rationale**:
+    
+    #### 1. Why 7 Days is WRONG for Low Velocity tables (`machine_focas`, `machine_energy`)
+    If you use a 7-day chunk size for tables that only get 3-6 rows per machine per day, you will create **"Micro-Chunks."**
+    
+    *   **The Math:**
+        *   Assume 100 machines.
+        *   `machine_focas`: 300 rows/day → 2,100 rows/week.
+        *   2,100 rows is tiny (approx 100KB - 200KB).
+    *   **The Problem:**
+        *   TimescaleDB (and PostgreSQL) has overhead for every single chunk (metadata, file handles, vacuum processes).
+        *   Creating a separate physical file for just 200KB of data is inefficient. It wastes disk inodes and slows down the query planner (it has to scan through hundreds of tiny files instead of a few large ones).
+    
+    #### 2. The Recommended Strategy: Coarse Chunking
+    
+    **For `machine_focas` and `machine_energy`:**
+    Use a **1 Month** interval.
+    
+    This gathers enough data (~30 shifts per machine) into a single file to make Indexes effective and Compression efficient.
+    
+    > **Note**: **Space Partitioning** is **Strictly Forbidden** for this volume.
+    
+    ```sql
+    -- Create Hypertable for Focas (Low Velocity)
+    SELECT create_hypertable('silver.machine_focas', 'logical_date', 
+        chunk_time_interval => INTERVAL '1 month');
+    
+    -- Create Hypertable for Energy (Low Velocity)
+    SELECT create_hypertable('silver.machine_energy', 'logical_date', 
+        chunk_time_interval => INTERVAL '1 month');
+    ```
+    
+    *(Note: If you have fewer than 50 machines, you could even increase this to `INTERVAL '3 months'` or `INTERVAL '1 year'`.)*
+    
+    #### 3. Compression is CRITICAL here
+    Since these tables are sparse (few rows per day), they are prime candidates for massive compression savings (often 96%+ reduction).
+    
+    However, because the data is sparse, you must **Segment By** the Machine ID to force the database to group that machine's monthly history together physically.
+    
+    **Configuration for `machine_focas`:**
+    ```sql
+    ALTER TABLE silver.machine_focas SET (
+        timescaledb.compress,
+        timescaledb.compress_segmentby = 'machine_iot_id', 
+        timescaledb.compress_orderby = 'logical_date DESC'
+    );
+    
+    -- Compress data older than 3 months (to allow for late shift data)
+    SELECT add_compression_policy('silver.machine_focas', INTERVAL '3 months');
+    ```
+    
+    **Configuration for `machine_energy`:**
+    ```sql
+    ALTER TABLE silver.machine_energy SET (
+        timescaledb.compress,
+        timescaledb.compress_segmentby = 'machine_iot_id, category', 
+        timescaledb.compress_orderby = 'logical_date DESC'
+    );
+    
+    -- Compress data older than 3 months
+    SELECT add_compression_policy('silver.machine_energy', INTERVAL '3 months');
+    ```
+    
+    #### Summary Comparison
+    
+    | Table | Frequency | Recommended Chunk Size | Why? |
+    | :--- | :--- | :--- | :--- |
+    | `machine_cycles` | High (Secs to Hours) | **7 Days** | Needs to manage high insert volume and keep recent data hot. |
+    | `machine_focas` | Low (3 per day) | **1 Month** | Avoids "micro-chunks"; groups enough data to compress well. |
+    | `machine_energy`| Low (6 per day) | **1 Month** | Avoids "micro-chunks"; groups enough data to compress well. |
+
+---
+
+## 4. Data Types Standards
+
+*   **Context**: PostgreSQL handles `TEXT` and `VARCHAR(N)` almost identically in terms of storage and performance. However, `VARCHAR(N)` enforces a length limit that often requires expensive `ALTER TABLE` operations later if requirements change.
+*   **Decision**: 
+    1.  **Prefer TEXT**: Use `TEXT` for all string/character columns by default.
+    2.  **Avoid VARCHAR(N)**: Do not use `VARCHAR` or `VARCHAR(N)` unless there is a specific, immutable business requirement for a length constraint (e.g., legacy system compatibility).
+*   **Rationale**: 
+    *   **Flexibility**: `TEXT` allows for future growth without schema migrations.
+    *   **Performance**: There is no performance penalty for using `TEXT` over `VARCHAR` in PostgreSQL.
+    *   **Simplicity**: Reduces cognitive load during schema design; no need to guess "max lengths".

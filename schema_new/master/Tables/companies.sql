@@ -2,43 +2,25 @@
 -- PostgreSQL database dump
 --
 
-
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
 -- Name: companies; Type: TABLE; Schema: master; Owner: -
 --
 
 CREATE TABLE master.companies (
     iot_id SERIAL NOT NULL,
-    company_id varchar(100) NOT NULL,
+    company_id text NOT NULL,
     company_name text NOT NULL,
     address text,
-    state varchar(100),
-    country varchar(100),
-    pin_code varchar(20),
-    email_id varchar(100),
-    phone_no varchar(50),
+    state text,
+    country text,
+    pin_code text,
+    email_id text,
+    phone_no text,
     default_plant_id integer,
     effective_from_date timestamp with time zone,
     effective_to_date timestamp with time zone,
     created_at timestamp with time zone DEFAULT now()
 );
-
 
 --
 -- Name: companies companies_pkey; Type: CONSTRAINT; Schema: master; Owner: -
@@ -49,7 +31,6 @@ ALTER TABLE ONLY master.companies
 
 ALTER TABLE ONLY master.companies
     ADD CONSTRAINT uq_company_id UNIQUE (company_id);
-
 
 --
 -- PostgreSQL database dump complete

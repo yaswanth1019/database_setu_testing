@@ -6,11 +6,11 @@ CREATE TABLE bronze.raw_machine_downtime (
     id BIGINT GENERATED ALWAYS AS IDENTITY NOT NULL,
     ingested_at timestamp with time zone DEFAULT now() NOT NULL,
     kafka_offset bigint,
-    device_iot_id integer NOT NULL,
+    device_id text NOT NULL,
     machine_iot_id integer NOT NULL,
     down_start timestamp with time zone,
     down_end timestamp with time zone,
-    program_no varchar(50),
+    program_no text,
     down_id integer,
     down_threshold integer
 );
@@ -32,5 +32,6 @@ CREATE INDEX idx_raw_machine_downtime_watermark ON bronze.raw_machine_downtime U
 -- Hypertable & Retention
 --
 
-SELECT create_hypertable('bronze.raw_machine_downtime', 'ingested_at', chunk_time_interval => INTERVAL '1 day');
-SELECT add_retention_policy('bronze.raw_machine_downtime', INTERVAL '30 days');
+SELECT create_hypertable(relation => 'bronze.raw_machine_downtime'::regclass, time_column_name => 'ingested_at'::name, chunk_time_interval => INTERVAL '1 day');
+SELECT add_retention_policy(relation => 'bronze.raw_machine_downtime'::regclass, drop_after => INTERVAL '30 days');
+

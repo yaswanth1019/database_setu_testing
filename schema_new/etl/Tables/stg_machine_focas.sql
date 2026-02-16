@@ -1,9 +1,8 @@
 --
 
-
 CREATE UNLOGGED TABLE etl.stg_machine_focas (
     raw_id BIGINT NOT NULL,
-    device_iot_id integer NOT NULL,
+    device_id text NOT NULL,
     machine_iot_id integer NOT NULL,
     logical_date timestamp with time zone,
     shift_id integer,
@@ -15,7 +14,7 @@ CREATE UNLOGGED TABLE etl.stg_machine_focas (
     ct integer
 );
 
-
 --
 -- PostgreSQL database dump complete
 --
+

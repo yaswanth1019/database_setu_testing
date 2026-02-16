@@ -18,8 +18,6 @@ BEGIN
 
     v_local_time := (p_time AT TIME ZONE 'Asia/Kolkata')::TIME;
 
-
-
     -- 2. Find matching shift with corrected cross-midnight logic
 
     SELECT shift_id INTO v_shift_id
@@ -62,8 +60,6 @@ BEGIN
 
     LIMIT 1;
 
-
-
     -- 3. Never return NULL to prevent aggregate drift
 
     RETURN COALESCE(v_shift_id, 'UNKNOWN');
@@ -72,3 +68,4 @@ END;
 
 $function$
 ;
+

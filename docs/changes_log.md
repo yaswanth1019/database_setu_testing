@@ -174,6 +174,13 @@ I have completed a major schema wide refactor to align the Master, Silver, Bronz
 - **ETL Schema**: Created a new `etl` schema in `schema_new/etl/` with a dedicated directory structure for Tables, Procedures, and Views. This will house the unified ingestion and transformation logic.
 - **Procedure Cleanup**: Deleted legacy stored procedures `proc_ingest_payload.sql` and `proc_process_bronze_batch.sql` from the `bronze` schema to prevent architectural ambiguity.
 
+#### 14. Schema Synchronization & Standardization
+- **Schema Definitions**: Added `schema_definition.sql` to all layers (`bronze`, `config`, `gold`, `master`, `silver`, `etl`, `mtb_catalog`) to ensure consistent initialization and idempotent schema creation.
+- **Gold Layer Cleanup**: Removed all legacy `.sql` files (Continuous Aggregates, Functions, Views) from the `gold` layer to reset it for future analytical development.
+- **Gold Layer Cleanup**: Removed all legacy `.sql` files (Continuous Aggregates, Functions, Views) from the `gold` layer to reset it for future analytical development.
+
+#### 13. MTB Catalog Implementation
+
 #### 12. Bronze and ETL Schema Refactoring
 - **Bronze Prefix Swap**: Renamed all tables in `bronze` from `stg_` to `raw_` (e.g., `bronze.raw_machine_status`). Updated all SQL definitions, indexes, and partition logic to reflect this.
 - **ETL Staging Layer**: Initialized 10 `UNLOGGED` staging tables in the `etl` schema using `stg_` prefixes. These are replicated from Bronze but optimized for transformation:

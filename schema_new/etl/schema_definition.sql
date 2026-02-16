@@ -7,3 +7,4 @@ CREATE SCHEMA etl;
 --
 -- PostgreSQL database dump complete
 --
+
