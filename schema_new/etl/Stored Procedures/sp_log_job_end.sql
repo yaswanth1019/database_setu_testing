@@ -1,6 +1,10 @@
---
--- Name: sp_log_job_end; Type: PROCEDURE; Schema: etl; Owner: -
---
+/*
+    OBJECT: sp_log_job_end
+    AUTHOR: Amith B R
+    PURPOSE: Updates the job log entry with completion status and metrics.
+    TARGET TABLE: etl.control_job_log
+    DEPENDENCIES: None
+*/
 
 CREATE OR REPLACE PROCEDURE etl.sp_log_job_end(
     p_log_id INT, 

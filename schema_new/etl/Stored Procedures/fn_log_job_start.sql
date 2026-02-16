@@ -1,6 +1,10 @@
---
--- Name: fn_log_job_start; Type: FUNCTION; Schema: etl; Owner: -
---
+/*
+    OBJECT: fn_log_job_start
+    AUTHOR: Amith B R
+    PURPOSE: Initializes an execution entry in the job log for orchestration.
+    TARGET TABLE: etl.control_job_log
+    DEPENDENCIES: None
+*/
 
 CREATE OR REPLACE FUNCTION etl.fn_log_job_start(
     p_job_name TEXT, 
