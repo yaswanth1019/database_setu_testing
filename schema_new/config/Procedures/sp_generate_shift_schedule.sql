@@ -1,0 +1,44 @@
+/*
+    OBJECT: sp_generate_shift_schedule
+    AUTHOR: Amith B R
+    PURPOSE: Generates shift instances for the next N days based on shift_definitions.
+             Uses from_day and to_day for relative date calculations.
+             Uses Asia/Kolkata for time calculations.
+    USAGE: CALL config.sp_generate_shift_schedule(30);
+*/
+
+CREATE OR REPLACE PROCEDURE config.sp_generate_shift_schedule(p_days integer DEFAULT 30)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_start_date date := current_date;
+    v_end_date date := current_date + (p_days - 1);
+BEGIN
+    INSERT INTO config.shift_schedule (
+        company_iot_id,
+        shift_name,
+        shift_id,
+        shift_start_time,
+        shift_end_time,
+        logical_date
+    )
+    SELECT 
+        sd.company_iot_id,
+        sd.shift_name,
+        sd.shift_id,
+        -- Start time: logical date + offset days + start_time defined (localized to shift timezone)
+        (d + (sd.from_day * interval '1 day') + sd.start_time) AT TIME ZONE sd.timezone AS shift_start_time,
+        -- End time: logical date + offset days + end_time (localized to shift timezone)
+        (d + (sd.to_day * interval '1 day') + sd.end_time) AT TIME ZONE sd.timezone AS shift_end_time,
+        d AS logical_date
+    FROM generate_series(v_start_date, v_end_date, interval '1 day') AS d
+    CROSS JOIN master.shift_definitions sd
+    WHERE sd.is_running = true
+    ON CONFLICT (company_iot_id, logical_date, shift_id) DO UPDATE SET
+        shift_start_time = EXCLUDED.shift_start_time,
+        shift_end_time = EXCLUDED.shift_end_time,
+        shift_name = EXCLUDED.shift_name;
+
+    COMMIT;
+END;
+$$;

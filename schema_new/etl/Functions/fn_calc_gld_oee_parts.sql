@@ -44,8 +44,8 @@ BEGIN
             SUM(actual_count)::integer as parts,
             SUM(actual_count * (std_cycle_time + std_load_unload))::numeric(18,2) as theoretical_time
         FROM silver.machine_focas_program_production
-        WHERE (logical_date AT TIME ZONE 'UTC')::date >= p_start_date 
-          AND (logical_date AT TIME ZONE 'UTC')::date <= p_end_date
+        WHERE logical_date >= (p_start_date::timestamp AT TIME ZONE 'UTC') 
+          AND logical_date <= (p_end_date::timestamp AT TIME ZONE 'UTC')
         GROUP BY machine_iot_id, company_iot_id, logical_date, shift_id
     ),
     rejects_agg AS (
@@ -56,8 +56,8 @@ BEGIN
             shift_id,
             SUM(rej_count)::integer as rejects
         FROM silver.machine_focas
-        WHERE (logical_date AT TIME ZONE 'UTC')::date >= p_start_date 
-          AND (logical_date AT TIME ZONE 'UTC')::date <= p_end_date
+        WHERE logical_date >= (p_start_date::timestamp AT TIME ZONE 'UTC') 
+          AND logical_date <= (p_end_date::timestamp AT TIME ZONE 'UTC')
         GROUP BY machine_iot_id, company_iot_id, logical_date, shift_id
     )
     SELECT 

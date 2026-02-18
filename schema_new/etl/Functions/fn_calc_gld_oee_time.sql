@@ -53,8 +53,8 @@ BEGIN
             SUM(CASE WHEN state_code = 'DOWN' THEN duration_sec ELSE 0 END)::numeric(18,2) as down_sec,
             SUM(CASE WHEN state_code = 'RUNNING' THEN duration_sec ELSE 0 END)::numeric(18,2) as utilized_sec
         FROM silver.machine_timeline
-        WHERE (logical_date AT TIME ZONE 'UTC')::date >= p_start_date 
-          AND (logical_date AT TIME ZONE 'UTC')::date <= p_end_date
+        WHERE logical_date >= (p_start_date::timestamp AT TIME ZONE 'UTC') 
+          AND logical_date <= (p_end_date::timestamp AT TIME ZONE 'UTC')
         GROUP BY machine_iot_id, company_iot_id, logical_date, shift_id
     )
     SELECT 
