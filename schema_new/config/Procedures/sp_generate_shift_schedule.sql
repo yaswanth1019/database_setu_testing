@@ -7,13 +7,22 @@
     USAGE: CALL config.sp_generate_shift_schedule(30);
 */
 
-CREATE OR REPLACE PROCEDURE config.sp_generate_shift_schedule(p_days integer DEFAULT 30)
+CREATE OR REPLACE PROCEDURE config.sp_generate_shift_schedule(
+    p_days integer DEFAULT 30,
+    p_job_name TEXT DEFAULT 'sp_generate_shift_schedule'
+)
 LANGUAGE plpgsql
 AS $$
 DECLARE
     v_start_date date := current_date;
     v_end_date date := current_date + (p_days - 1);
+    v_log_id INT;
+    v_rows_affected INT DEFAULT 0;
 BEGIN
+    -- 1. ORCHESTRATION START
+    v_log_id := etl.fn_log_job_start(p_job_name, 'INCREMENTAL');
+
+    -- 2. CORE LOGIC
     INSERT INTO config.shift_schedule (
         company_iot_id,
         shift_name,
@@ -39,6 +48,14 @@ BEGIN
         shift_end_time = EXCLUDED.shift_end_time,
         shift_name = EXCLUDED.shift_name;
 
+    GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
+
+    -- 3. ORCHESTRATION END
+    CALL etl.sp_log_job_end(v_log_id, 'SUCCESS', v_rows_affected, 'Generated/Updated shifts for ' || p_days || ' days.');
+
     COMMIT;
+EXCEPTION WHEN OTHERS THEN
+    CALL etl.sp_log_job_end(v_log_id, 'FAILED', 0, SQLERRM);
+    RAISE;
 END;
 $$;
